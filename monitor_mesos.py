@@ -1,6 +1,6 @@
 """Get metrics from mesos machines and index them in elasticsearch
 
-Usage: python monitor_mesos.py <config_file>
+Usage: [PYTHON_MESOS_ES_<key>=<val>] python monitor_mesos.py <config_file>
 
 Config file is a json file with the following structure:
     elasticsearch: object representing where to index the data
@@ -13,6 +13,10 @@ Config file is a json file with the following structure:
         name: what to call the machine
         type: "master" or "agent"
         url: base url for mesos on the machine
+
+You can override keys from the elasticsearch config by setting environment variables
+For instance setting PYTHON_MESOS_ES_password will override config["elasticsearch"]["password"]
+This is done so that sensitive information does not need to be stored in the config file
 """
 from __future__ import print_function
 import datetime as dt
@@ -78,6 +82,12 @@ def main():
     logging.basicConfig(level=os.environ.get("MESOS_MONITOR_LOG_LEVEL", "ERROR"))
     with open(sys.argv[1]) as config_file:
         config = json.load(config_file)
+    config["elasticsearch"].update(
+        dict([
+            (key[len("PYTHON_MESOS_ES_"):], val) for key, val in os.environ.items()
+            if key.startswith("PYTHON_MESOS_ES_")
+        ])
+    )
     logging.info("Loaded config")
     logging.debug(repr(config))
     index_machines(config)
