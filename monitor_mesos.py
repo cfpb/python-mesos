@@ -82,7 +82,7 @@ def index_machines(config):
         auth = None
         if "username" in machine:
             auth = (machine["username"], machine["password"])
-        metrics = get_machine_metrics(machine["url"])
+        metrics = get_machine_metrics(machine["url"], auth=auth)
         record = make_metrics_record(machine, metrics, timestamp)
         logging.debug("Ready to index record %r", record)
         index_rec(record, config["elasticsearch"])
