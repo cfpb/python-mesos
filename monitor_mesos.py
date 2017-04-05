@@ -83,7 +83,7 @@ def get_machine_metrics(machine_url, auth=None):
 
 def index_machines(config):
     """Get metrics for all the machines listed in the config and index them to elasticsearch"""
-    timestamp = dt.datetime.now().isoformat()
+    timestamp = dt.datetime.utcnow().isoformat()
     for machine in config["machines"]:
         auth = None
         if "username" in machine:
