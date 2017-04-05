@@ -34,6 +34,11 @@ import sys
 import requests
 
 
+def strip_keys(data, keys):
+    """return a copy of dict `data` with certain keys missing"""
+    return dict([(key, val) for key, val in data.items() if key not in keys])
+
+
 def index_rec(rec, es_config):
     """Index a record in elasticsearch
     :param es_config: Dict with url/index/rectype and optionally username/password
@@ -60,7 +65,7 @@ def make_metrics_record(machine, metrics, timestamp):
         "host": machine["name"],
         "tags": ["mesos", machine["type"]],
         "message": {
-            "machine": machine,
+            "machine": strip_keys(machine, ["username", "password"]),
             "metrics": metrics,
         },
     }
