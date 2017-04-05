@@ -70,6 +70,7 @@ def get_machine_metrics(machine_url, auth=None):
     """Get the metrics for a mesos machine
     :param machine_url: base url for a mesos instance"""
     logging.info("Getting metrics for machine %s", machine_url)
+    logging.debug("Using auth %r", auth)
     result = requests.get(machine_url + "/metrics/snapshot", auth=auth, verify=False)
     result.raise_for_status()
     return result.json()
