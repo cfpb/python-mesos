@@ -44,7 +44,7 @@ def index_rec(rec, es_config):
     if "username" in es_config:
         args["auth"] = (es_config["username"], es_config["password"])
 
-    result = requests.post(url, data=json.dumps(rec), **args)
+    result = requests.post(url, data=json.dumps(rec), verify=False, **args)
     result.raise_for_status()
     return result
 
@@ -69,7 +69,7 @@ def make_metrics_record(machine, metrics, timestamp):
 def get_machine_metrics(machine_url, auth=None):
     """Get the metrics for a mesos machine
     :param machine_url: base url for a mesos instance"""
-    result = requests.get(machine_url + "/metrics/snapshot", auth=auth)
+    result = requests.get(machine_url + "/metrics/snapshot", auth=auth, verify=False)
     return result.json()
 
 
