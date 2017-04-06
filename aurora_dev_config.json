@@ -3,6 +3,7 @@
         "url": "http://localhost:9201",
         "index": "mesos",
         "rectype": "metric",
+	"container_rectype": "container",
         "username": "admin",
         "password": "password"
     },

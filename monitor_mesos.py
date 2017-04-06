@@ -43,7 +43,8 @@ def index_rec(rec, es_config):
     """Index a record in elasticsearch
     :param es_config: Dict with url/index/rectype and optionally username/password
     :param rec: A dict to be indexed in ES"""
-    url = "{url}/{index}/{rectype}".format(**es_config)
+    rectype = es_config["rectype" if rec["type"] == "mesos_snapshot" else "container_rectype"]
+    url = "{url}/{index}/{es_rectype}".format(es_rectype=rectype, **es_config)
 
     args = {}
     if "username" in es_config:
@@ -81,6 +82,33 @@ def get_machine_metrics(machine_url, auth=None):
     return result.json()
 
 
+def make_stats_record(machine, container_stat, timestamp):
+    """Make the full record to be indexed
+    :param machine: the machine's config entry
+    :param metrics: the metrics output received from mesos
+    :param timestamp: string to use as a timestamp for the record"""
+    return {
+        "type": "mesos_container",
+        "@timestamp": timestamp,
+        "host": machine["name"],
+        "tags": ["mesos", machine["type"]],
+        "message": {
+            "machine": strip_keys(machine, ["username", "password"]),
+            "container": container_stat,
+        },
+    }
+
+
+def get_statistics(machine_url, auth=None):
+    """Get the statistics for a mesos agent
+    :param machine_url: base url for a mesos instance"""
+    logging.info("Getting statistics for machine %s", machine_url)
+    logging.debug("Using auth %r", auth)
+    result = requests.get(machine_url + "/monitor/statistics.json", auth=auth, verify=False)
+    result.raise_for_status()
+    return result.json()
+
+
 def index_machines(config):
     """Get metrics for all the machines listed in the config and index them to elasticsearch"""
     timestamp = dt.datetime.utcnow().isoformat()
@@ -92,6 +120,12 @@ def index_machines(config):
         record = make_metrics_record(machine, metrics, timestamp)
         logging.debug("Ready to index record %r", record)
         index_rec(record, config["elasticsearch"])
+        if machine["type"] == "agent":
+            container_stats = get_statistics(machine["url"], auth=auth)
+            for stat in container_stats:
+                record = make_stats_record(machine, stat, timestamp)
+                logging.debug("Ready to index container record %r", record)
+                index_rec(record, config["elasticsearch"])
 
 
 def main():
