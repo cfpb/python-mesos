@@ -87,6 +87,13 @@ def make_stats_record(machine, container_stat, timestamp):
     :param machine: the machine's config entry
     :param metrics: the metrics output received from mesos
     :param timestamp: string to use as a timestamp for the record"""
+    # Calculate mem_free_bytes
+    stats = container_stat.get("statistics")
+    if stats:
+        total, limit = stats.get("mem_total_bytes"), stats.get("mem_limit_bytes")
+        if total and limit:
+            stats["mem_free_bytes"] = limit - total
+
     return {
         "type": "mesos_container",
         "@timestamp": timestamp,
